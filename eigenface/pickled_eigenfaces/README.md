@@ -1,1 +1,0 @@
-# Eigenface Pickles
