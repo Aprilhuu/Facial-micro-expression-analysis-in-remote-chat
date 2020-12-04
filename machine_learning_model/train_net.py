@@ -168,9 +168,9 @@ class Trainer:
         Loss = 0
         Acc = 0
         for i, (img, lbl) in enumerate(self.test_loader):
-            img = img.to(self.device)
+            # img = img.to(self.device)
             lbl = lbl.to(self.device)
-            all_output = torch.zeros((self.num_classes, img.shape[0], self.num_classes)).to(self.device)
+            all_output = torch.zeros((self.num_classes, img.shape[0], self.num_classes))
             for cls_idx in range(self.num_classes):
                 cls = self.classes[cls_idx]
                 filtered_batch = torch.zeros((img.shape[0], 3, 48, 48)).to(self.device)
@@ -182,8 +182,9 @@ class Trainer:
                     filtered_batch[img_idx] = eigen_img_rgb
                 filtered_batch = F.interpolate(filtered_batch, size=(self.img_size, self.img_size), mode='bilinear')
                 output = self.model(filtered_batch)
+                # print(output.shape)
                 all_output[cls_idx] = output
-            best_output = torch.max(all_output, axis=0)[0]
+            best_output = torch.max(all_output, axis=0)[0].to(self.device)
             loss = self.loss_func(best_output, lbl)
             prediction = torch.argmax(best_output, axis=1)
 
@@ -195,6 +196,7 @@ class Trainer:
                 print("[test] batch: %d, loss: %.3f, acc: %.3f" % (i + 1, Loss / (i + 1), Acc / (i + 1)))
         self.lst[2].append(Loss / (i + 1))
         self.lst[3].append(Acc / (i + 1))
+
 
 
     def start(self):
