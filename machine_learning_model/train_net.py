@@ -208,7 +208,7 @@ class Trainer:
                 for param in self.optimizer.param_groups:
                     param['lr'] = logspace_lr[e]
             self.train()
-            self.test_eigen()
+            self.test()
             self.draw()
 
             # self.draw()
