@@ -27,6 +27,7 @@ def seed_torch(seed=0):
 
 class Trainer:
     def __init__(self, hparam):
+        self.eigen = hparam['eigen']
         self.device = hparam['device']
         self.lr = hparam['lr']
         self.model_name = hparam['model_name']
@@ -69,20 +70,35 @@ class Trainer:
 
     def prepare_dataset(self):
         ## Data augmentation
-        train_transform = transforms.Compose([
-            transforms.Resize((self.img_size, self.img_size)),
-            # transforms.RandomCrop(self.img_size),
-            transforms.RandomHorizontalFlip(0.5),
-            transforms.ToTensor(),
-            # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+        if self.eigen:
+            train_transform = transforms.Compose([
+                transforms.Resize((self.img_size, self.img_size)),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.ToTensor(),
+                # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
 
-        test_transform = transforms.Compose([
-            transforms.Resize((48, 48)),
-            transforms.Grayscale(num_output_channels=1),
-            transforms.ToTensor(),
-            # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+            test_transform = transforms.Compose([
+                transforms.Resize((48, 48)),
+                transforms.Grayscale(num_output_channels=1),
+                transforms.ToTensor(),
+                # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+        else:
+            train_transform = transforms.Compose([
+                transforms.Resize((self.img_size, self.img_size)),
+                # transforms.RandomCrop(self.img_size),
+                transforms.RandomHorizontalFlip(0.5),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+
+            test_transform = transforms.Compose([
+                transforms.Resize((48, 48)),
+                # transforms.Grayscale(num_output_channels=1),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
 
         self.train_set = datasets.ImageFolder(root=self.datapath + "/train", transform=train_transform)
         self.train_loader = torch.utils.data.DataLoader(self.train_set, batch_size=self.bs, shuffle=True)
@@ -208,7 +224,10 @@ class Trainer:
                 for param in self.optimizer.param_groups:
                     param['lr'] = logspace_lr[e]
             self.train()
-            self.test()
+            if self.eigen:
+                self.test_eigen()
+            else:
+                self.test()
             self.draw()
 
             # self.draw()
