@@ -85,11 +85,11 @@ def prepare_eigenfaces(train_dataset='disgust'):
 	pickle_dump("./pickled_eigenfaces/cov_eigenvec_"+train_dataset+".obj", eigen_vec.real)
 	pickle_dump("./pickled_eigenfaces/avg_face_"+train_dataset+".obj", avg_face.real)
 
-def eigenface_filter(img, eigenface_basis='disgust', proj_basis_num=100):
+def eigenface_filter(img, dir_path, eigenface_basis='disgust', proj_basis_num=100):
 
 	# load training eigenfaces
-	eigen_vec = pickle_load("./pickled_eigenfaces/cov_eigenvec_"+eigenface_basis+".obj").real
-	avg_face = pickle_load("./pickled_eigenfaces/avg_face_"+eigenface_basis+".obj").real
+	eigen_vec = pickle_load(dir_path + "cov_eigenvec_"+eigenface_basis+".obj").real
+	avg_face = pickle_load(dir_path +"avg_face_"+eigenface_basis+".obj").real
 
 	row, col = img.shape
 	img_proj = eigenface_projection(img, eigen_vec, proj_basis_num)
@@ -102,7 +102,7 @@ def main():
 	# save_projection(train_dataset='disgust', proj_basis_num=80)
 	test_dataset = 'angry'
 	test_images = load_images_from_folder('./FER2013/test/' + test_dataset)
-	img_proj = eigenface_filter(test_images[0], eigenface_basis='angry', proj_basis_num=160)
+	img_proj = eigenface_filter(test_images[0],dir_path="./pickled_eigenfaces/", eigenface_basis='angry', proj_basis_num=160)
 
 	plt.imshow(img_proj)
 	plt.show()
