@@ -176,7 +176,7 @@ class Trainer:
 
 def main():
     print("hello")
-    stream = open('./hparam.yaml', 'r')
+    stream = open('./Facial-micro-expression-analysis-in-remote-chat/machine_learning_model/hparam.yaml', 'r')
     hparam = yaml.load(stream)
     print(hparam)
 

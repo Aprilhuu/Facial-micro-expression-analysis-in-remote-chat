@@ -1,7 +1,7 @@
 device: 0
 lr: 0.0001
 model_name: resnet18
-batchsize:64
+batchsize: 64
 logspace: 0
 gamma: 0.9
 momentum: 0.9
@@ -9,5 +9,5 @@ weight_decay: 0.00001
 epoch: 100
 seed: 0
 opt: adam
-datapath: ./data/
+datapath: ./eigen_FER2013
 result_path: result_resnet18
