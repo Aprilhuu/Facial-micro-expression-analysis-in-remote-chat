@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import sys
 import os
+
 proj_dir = os.path.join(os.getcwd(), "Facial-micro-expression-analysis-in-remote-chat")
 sys.path.append(proj_dir)
 from eigenface.eigenface import *
@@ -16,6 +17,7 @@ import matplotlib.pyplot as plt
 from google.colab import files
 import yaml
 
+
 def seed_torch(seed=0):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -27,6 +29,7 @@ def seed_torch(seed=0):
 
 class Trainer:
     def __init__(self, hparam):
+        self.start_epoch = hparam['start_epoch']
         self.eigen = hparam['eigen']
         self.device = hparam['device']
         self.lr = hparam['lr']
@@ -66,6 +69,12 @@ class Trainer:
                                              weight_decay=self.weight_decay)
         else:
             self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+
+        if self.start_epoch != 0:
+            self.model.load_state_dict(
+                torch.load(os.path.join(self.result_path, "model_{}.bin".format(self.start_epoch - 1))))
+            self.lst = torch.load(os.path.join(self.result_path, "list_{}.bin".format(self.start_epoch - 1)))
+
         self.loss_func = nn.CrossEntropyLoss(reduction="mean")
 
     def prepare_dataset(self):
@@ -94,7 +103,7 @@ class Trainer:
             ])
 
             test_transform = transforms.Compose([
-                transforms.Resize((48, 48)),
+                transforms.Resize((self.img_size, self.img_size)),
                 # transforms.Grayscale(num_output_channels=1),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -192,8 +201,9 @@ class Trainer:
                 filtered_batch = torch.zeros((img.shape[0], 3, 48, 48)).to(self.device)
                 for img_idx in range(img.shape[0]):
                     individual_img = img[img_idx][0] * 255
-                    eigen_img = (eigenface_filter(individual_img.cpu(), os.path.join(os.getcwd(), 'pickle') + "/", cls, proj_basis_num=160))
-                    eigen_img_rgb = transforms.ToTensor()(np.stack((eigen_img,)*3, axis=-1))
+                    eigen_img = (eigenface_filter(individual_img.cpu(), os.path.join(os.getcwd(), 'pickle') + "/", cls,
+                                                  proj_basis_num=160))
+                    eigen_img_rgb = transforms.ToTensor()(np.stack((eigen_img,) * 3, axis=-1))
                     # print(eigen_img_rgb.shape)
                     filtered_batch[img_idx] = eigen_img_rgb
                 filtered_batch = F.interpolate(filtered_batch, size=(self.img_size, self.img_size), mode='bilinear')
@@ -213,13 +223,12 @@ class Trainer:
         self.lst[2].append(Loss / (i + 1))
         self.lst[3].append(Acc / (i + 1))
 
-
-
     def start(self):
         if self.logspace != 0:
             logspace_lr = np.logspace(np.log10(self.lr), np.log10(self.lr) - self.logspace, self.epoch)
-
-        for e in range(self.epoch):
+        print(self.start_epoch, self.epoch)
+        for e in range(self.start_epoch, self.epoch):
+            print(e)
             if self.logspace != 0:
                 for param in self.optimizer.param_groups:
                     param['lr'] = logspace_lr[e]
@@ -230,9 +239,9 @@ class Trainer:
                 self.test()
             self.draw()
 
-            # self.draw()
-        torch.save(self.model.state_dict(), os.path.join(self.result_path, "model_{}.bin".format(e)))
-        torch.save(self.lst, os.path.join(self.result_path, "list_{}.bin".format(e)))
+        self.draw()
+        torch.save(self.model.state_dict(), os.path.join(self.result_path, "model_{}.bin".format(self.epoch - 1)))
+        torch.save(self.lst, os.path.join(self.result_path, "list_{}.bin".format(self.epoch - 1)))
 
 
 def main():

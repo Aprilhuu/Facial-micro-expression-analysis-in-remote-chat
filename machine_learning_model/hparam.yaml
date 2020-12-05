@@ -12,3 +12,4 @@ opt: adam
 datapath: ./FER2013
 result_path: result_resnet18
 eigen: False
+start_epoch: 0
