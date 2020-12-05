@@ -96,7 +96,8 @@ class Trainer:
         else:
             train_transform = transforms.Compose([
                 transforms.Resize((self.img_size, self.img_size)),
-                # transforms.RandomCrop(self.img_size),
+                transforms.RandomCrop(self.img_size),
+                transforms.RandomRotation(degrees=(-90, 90)),
                 transforms.RandomHorizontalFlip(0.5),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -125,9 +126,14 @@ class Trainer:
             lbl = lbl.to(self.device)
 
             output = self.model(img)
+            lam = 0.5
+            l2_reg = 0
+            for param in self.model.parameters():
+                l2_reg += torch.norm(param)
             loss = self.loss_func(output, lbl)
+            reg_loss = loss + lam * l2_reg
             self.optimizer.zero_grad()
-            loss.backward()
+            reg_loss.backward()
             self.optimizer.step()
             # print(output.size())
             prediction = torch.argmax(output, axis=1)
