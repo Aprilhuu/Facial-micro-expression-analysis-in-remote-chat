@@ -6,8 +6,9 @@ logspace: 0
 gamma: 0.9
 momentum: 0.9
 weight_decay: 0.00001
-epoch: 100
+epoch: 60
 seed: 0
 opt: adam
-datapath: ./eigen_FER2013
+datapath: ./FER2013
 result_path: result_resnet18
+eigen: False
