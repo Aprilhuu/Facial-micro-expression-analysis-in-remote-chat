@@ -44,7 +44,8 @@ def eigenface_projection(img, eigen_vec, basis_num):
 	img_proj = np.zeros(img_flat.shape)
 
 	for k in range(basis_num):
-		img_proj += np.dot(img_flat, eigen_vec[:, k]) * eigen_vec[:, k] / np.square(LA.norm(eigen_vec[:, k]))
+		# img_proj += np.dot(img_flat, eigen_vec[:, k]) * eigen_vec[:, k] / np.square(LA.norm(eigen_vec[:, k]))
+		img_proj += np.multiply(np.dot(img_flat, eigen_vec[:, k]), eigen_vec[:, k])
 
 	return img_proj
 
@@ -85,24 +86,31 @@ def prepare_eigenfaces(train_dataset='disgust'):
 	pickle_dump("./pickled_eigenfaces/cov_eigenvec_"+train_dataset+".obj", eigen_vec.real)
 	pickle_dump("./pickled_eigenfaces/avg_face_"+train_dataset+".obj", avg_face.real)
 
-def eigenface_filter(img, dir_path, eigenface_basis='disgust', proj_basis_num=100):
+def eigenface_filter(img, eigen_vec, avg_face, proj_basis_num=100):
 
 	# load training eigenfaces
-	eigen_vec = pickle_load(dir_path + "cov_eigenvec_"+eigenface_basis+".obj").real
-	avg_face = pickle_load(dir_path +"avg_face_"+eigenface_basis+".obj").real
+	# eigen_vec = pickle_load(dir_path + "cov_eigenvec_"+eigenface_basis+".obj").real
+	# avg_face = pickle_load(dir_path +"avg_face_"+eigenface_basis+".obj").real
 
 	row, col = img.shape
 	img_proj = eigenface_projection(img, eigen_vec, proj_basis_num)
-	img_proj = img_proj + avg_face
-	img_proj *= 255 / np.amax(img_proj)
+	img_proj *= 255 / np.amax(np.add(img_proj, avg_face))
 	return np.reshape(img_proj, (row, col))
+
+def load_eigenfaces(eigenface_basis='disgust', dir_path="./pickled_eigenfaces/"):
+	eigen_vec = pickle_load(dir_path + "cov_eigenvec_" + eigenface_basis + ".obj").real
+	avg_face = pickle_load(dir_path + "avg_face_" + eigenface_basis + ".obj").real
+	return eigen_vec, avg_face
 
 def main():
 	# prepare_eigenfaces(train_dataset='surprise')
 	# save_projection(train_dataset='disgust', proj_basis_num=80)
+
 	test_dataset = 'angry'
 	test_images = load_images_from_folder('./FER2013/test/' + test_dataset)
-	img_proj = eigenface_filter(test_images[0],dir_path="./pickled_eigenfaces/", eigenface_basis='angry', proj_basis_num=160)
+
+	eigen_vec, avg_face = load_eigenfaces(eigenface_basis='disgust', dir_path="./pickled_eigenfaces/")
+	img_proj = eigenface_filter(test_images[0], eigen_vec, avg_face, proj_basis_num=160)
 
 	plt.imshow(img_proj)
 	plt.show()
