@@ -59,10 +59,10 @@ class Trainer:
     def prepare_model(self):
         if self.model_name == "resnet18":
             model = models.resnet18(pretrained=False, num_classes=self.num_classes)
-            self.img_size = 224
+            self.img_size = 48
         elif self.model_name == "resnet50":
             model = models.resnet50(pretrained=False, num_classes=self.num_classes)
-            self.img_size = 224
+            self.img_size = 48
         self.model = model
         if self.opt == 'sgd':
             self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.lr, momentum=self.momentum,
