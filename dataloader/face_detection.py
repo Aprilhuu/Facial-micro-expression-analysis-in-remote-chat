@@ -7,20 +7,33 @@ import argparse
 
 
 def sample_video(file_path, sampling_rate=20):
+    """ sample frames from viedeo using given sampling rate """
     # Opens the Video file
     videofile = cv2.VideoCapture(file_path)
+    # Initializes frame_sequences & index for while loop
     i = 0
     frame_seq = []
+    # Looping over all the frames in the videos
     while videofile.isOpened():
+        # Read a single frame
+        # {ret, frame} are 2 returned values for method: videofile.read().
+        # ret is a boolean value. If the given frame is valid -> True, otherwise -> False
         ret, frame = videofile.read()
         if not ret:
+            # break when the video comes to the end
             break
-        if i % sampling_rate == 0:  # this is the line I added to make it only save one frame every 20
+        if i % sampling_rate == 0:  # Save one frame from every 20 frames of the video
+            # change the given RGB frame to grayscale
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            # append the selected grayscale frame to the frame sequences
             frame_seq.append(gray)
         i += 1
-
+    # When you call videofile.release(), then:
+    # 1. release software resource
+    # 2. release hardware resource
+    # This action is to be prepared for the next VideoCapture, or else an OpenCv Exception will be raised. 
     videofile.release()
+    # destroys all the windows created
     cv2.destroyAllWindows()
     return frame_seq
 
