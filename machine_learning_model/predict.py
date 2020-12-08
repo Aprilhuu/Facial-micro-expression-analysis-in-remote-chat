@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from google.colab import files
 import yaml
 import argparse
-
+import cv2
 
 def main():
     parser = argparse.ArgumentParser()
@@ -44,7 +44,7 @@ def main():
         model = models.resnet50(pretrained=False, num_classes=num_classes)
 
     model.load_state_dict(torch.load(args.model_path))
-
+    model.eval()
     os.environ['CUDA_VISIBLE_DEVICES'] = str(args.device)
 
     model.to(args.device)
@@ -82,12 +82,14 @@ def main():
         for k in class_correct:
             print("{}: {} / {}".format(class2lbl[k], class_correct[k], class_total[k]))
     else:
-        test_imgs = os.listdir(args.test_img_dir)
+        test_imgs = [i for i in os.listdir(args.test_img_dir) if ".png" in i]
         test_imgs.sort()
         for i in range(len(test_imgs)):
             img_path = os.path.join(args.test_img_dir, test_imgs[i])
             img_arr = Image.open(img_path).convert('RGB')
             img_arr = test_transform(img_arr)[None, :, :, :].to(args.device)
+            # print(img_arr)
+            print(img_arr.shape)
             p = torch.argmax(model(img_arr)).cpu().item()
 
             print(test_imgs[i], class2lbl[str(p)])
@@ -95,4 +97,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

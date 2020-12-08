@@ -93,10 +93,10 @@ def non_max_suppression_fast(boxes, confidence, overlapThresh=0.4, reversed=Fals
     return boxes[pick].astype("int"), confidence[pick]
 
 
-def process_frame(frame_seq, video_name, image_size, result_dir, num_person=1):
+def process_frame(frame_seq, video_name, image_size, result_dir, model_path, num_person=1):
     count = 0
-    model = joblib.load("finalized_face_detection_model.sav")
-
+    model = joblib.load(model_path)
+    results = np.zeros((len(frame_seq), image_size[0], image_size[1], 3), dtype=np.uint8)
     for one_frame in frame_seq:
         frame_blurred = cv2.blur(one_frame, (6, 6))
         indices, patches, scale_levels = zip(*sliding_window(frame_blurred, patch_size=image_size))
@@ -138,11 +138,13 @@ def process_frame(frame_seq, video_name, image_size, result_dir, num_person=1):
             plt.imshow(resized, cmap="gray")
             plt.show()
             print(resized.shape)
-            save_file_name = video_name.split(".")[0] + "_" + str(count) + "_" + str(intra_frame_count) + ".jpg"
-            cv2.imwrite(result_dir + "/" + save_file_name, resized)
+            # save_file_name = video_name.split(".")[0] + "_" + str(count) + "_" + str(intra_frame_count) + ".jpg"
+            # cv2.imwrite(result_dir + "/" + save_file_name, resized)
             intra_frame_count += 1
-
+        resized = cv2.cvtColor(resized, cv2.COLOR_GRAY2BGR)
+        results[count] = resized
         count += 1
+    return results
 
 
 if __name__ == '__main__':
