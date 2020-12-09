@@ -126,14 +126,9 @@ class Trainer:
             lbl = lbl.to(self.device)
 
             output = self.model(img)
-            lam = 0.5
-            l2_reg = 0
-            for param in self.model.parameters():
-                l2_reg += torch.norm(param)
             loss = self.loss_func(output, lbl)
-            reg_loss = loss + lam * l2_reg
             self.optimizer.zero_grad()
-            reg_loss.backward()
+            loss.backward()
             self.optimizer.step()
             # print(output.size())
             prediction = torch.argmax(output, axis=1)
