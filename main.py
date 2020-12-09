@@ -36,12 +36,30 @@ def main():
     parser.add_argument('--result_dir', default="./detection_results", type=str)
 
     args = parser.parse_args()
+    
+    # create result directory 
     if not os.path.exists(args.result_dir):
         os.makedirs(args.result_dir)
+    
+    # image size
     img_size = 48
+    
+    # mapping {index : expression}
     class2lbl = {'0': 'angry', '1': 'disgust', '2': 'fear', '3': 'happy', '4': 'neutral', '5': 'sad', '6': 'surprise'}
+    
+    # sample frame sequences
     frames = sample_video(args.video_path, args.sample_rate)
-    print(frames)
+    print("Sampled Frame Sequences: ", frames)
+    
+    # process frame
+    # input :
+    #  - frames : the sample frames
+    #  - result_dir : output directory, "./detection_results"
+    #  - image_size : (48, 48)
+    #  - video_name : e.g. sheldon.mp4
+    #  - model_path : /content/Facial-micro-expression-analysis-in-remote-chat/dataloader/finalized_face_detection_model.sav
+    # output : 
+    #  - resized : 
     resized = process_frame(frames, result_dir=args.result_dir, image_size=(img_size, img_size),
                             video_name=args.video_path.split("/")[-1], model_path=args.svm_model_path)
     print(resized.shape)
