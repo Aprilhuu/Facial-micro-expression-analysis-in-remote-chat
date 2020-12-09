@@ -31,7 +31,7 @@ def main():
                         type=str)
     parser.add_argument("--device", default=0, type=int)
     parser.add_argument("--num_classes", default=7, type=int)
-    parser.add_argument('--video_path', default='./sheldon.mp4', type=str)
+    parser.add_argument('--video_path', default='./Facial-micro-expression-analysis-in-remote-chat/data/sheldon.mp4', type=str)
     parser.add_argument('--sample_rate', default=10, type=int)
     parser.add_argument('--result_dir', default="./detection_results", type=str)
 
