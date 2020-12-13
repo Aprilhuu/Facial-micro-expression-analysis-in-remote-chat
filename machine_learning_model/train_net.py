@@ -14,7 +14,7 @@ import torchvision.transforms as transforms
 import random
 from torch import nn
 import matplotlib.pyplot as plt
-from google.colab import files
+# from google.colab import files
 import yaml
 
 
@@ -188,29 +188,52 @@ class Trainer:
         self.lst[3].append(Acc / (i + 1))
 
     def test_eigen(self):
-        self.model.eval()
-        self.model.to(self.device)
+        # self.model.eval()
+        # self.model.to(self.device)
 
         Loss = 0
         Acc = 0
+
+        eigenfaces = []
+        for cls_idx in range(self.num_classes):
+            cls = self.classes[cls_idx]
+            eigen_vec, avg_face = load_eigenfaces(eigenface_basis=cls, dir_path="./pickled_eigenfaces/")
+            eigenfaces.append({'eigen_vec': eigen_vec, 'avg_face': avg_face})
+
+        print(eigenfaces)
+        exit()
+
+
         for i, (img, lbl) in enumerate(self.test_loader):
             # img = img.to(self.device)
             lbl = lbl.to(self.device)
             all_output = torch.zeros((self.num_classes, img.shape[0], self.num_classes))
+
             for cls_idx in range(self.num_classes):
-                cls = self.classes[cls_idx]
+
+                # cls = self.classes[cls_idx]
+
                 filtered_batch = torch.zeros((img.shape[0], 3, 48, 48)).to(self.device)
+
                 for img_idx in range(img.shape[0]):
+
                     individual_img = img[img_idx][0] * 255
-                    eigen_img = (eigenface_filter(individual_img.cpu(), os.path.join(os.getcwd(), 'pickle') + "/", cls,
-                                                  proj_basis_num=160))
+                    # eigen_img = (eigenface_filter(individual_img.cpu(), os.path.join(os.getcwd(), 'pickle') + "/", cls,
+                    #                               proj_basis_num=160))
+                    eigen_img = (eigenface_filter(individual_img.cpu(),
+                                                    eigenfaces[cls_idx]['eigen_vec'],
+                                                    eigenfaces[cls_idx]['avg_face'],
+                                                    proj_basis_num=160))
+
                     eigen_img_rgb = transforms.ToTensor()(np.stack((eigen_img,) * 3, axis=-1))
                     # print(eigen_img_rgb.shape)
                     filtered_batch[img_idx] = eigen_img_rgb
+
                 filtered_batch = F.interpolate(filtered_batch, size=(self.img_size, self.img_size), mode='bilinear')
                 output = self.model(filtered_batch)
                 # print(output.shape)
                 all_output[cls_idx] = output
+
             best_output = torch.max(all_output, axis=0)[0].to(self.device)
             loss = self.loss_func(best_output, lbl)
             prediction = torch.argmax(best_output, axis=1)
@@ -225,6 +248,13 @@ class Trainer:
         self.lst[3].append(Acc / (i + 1))
 
     def start(self):
+
+
+
+        self.test_eigen()
+
+
+
         if self.logspace != 0:
             logspace_lr = np.logspace(np.log10(self.lr), np.log10(self.lr) - self.logspace, self.epoch)
         print(self.start_epoch, self.epoch)
