@@ -188,8 +188,8 @@ class Trainer:
         self.lst[3].append(Acc / (i + 1))
 
     def test_eigen(self):
-        # self.model.eval()
-        # self.model.to(self.device)
+        self.model.eval()
+        self.model.to(self.device)
 
         Loss = 0
         Acc = 0
@@ -199,10 +199,6 @@ class Trainer:
             cls = self.classes[cls_idx]
             eigen_vec, avg_face = load_eigenfaces(eigenface_basis=cls, dir_path="./eigenface_pickle/pickle/")
             eigenfaces.append({'eigen_vec': eigen_vec, 'avg_face': avg_face})
-
-        print(eigenfaces)
-        exit()
-
 
         for i, (img, lbl) in enumerate(self.test_loader):
             # img = img.to(self.device)
@@ -248,12 +244,6 @@ class Trainer:
         self.lst[3].append(Acc / (i + 1))
 
     def start(self):
-
-
-
-        self.test_eigen()
-
-
 
         if self.logspace != 0:
             logspace_lr = np.logspace(np.log10(self.lr), np.log10(self.lr) - self.logspace, self.epoch)

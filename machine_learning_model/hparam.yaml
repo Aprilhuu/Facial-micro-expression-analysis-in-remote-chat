@@ -11,5 +11,5 @@ seed: 0
 opt: adam
 datapath: ./FER2013
 result_path: result_resnet18
-eigen: False
+eigen: True
 start_epoch: 0
