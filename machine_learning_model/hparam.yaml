@@ -9,7 +9,7 @@ weight_decay: 0.00001
 epoch: 60
 seed: 0
 opt: adam
-datapath: ./FER2013
+datapath: ./eigenface_projection
 result_path: result_resnet18
-eigen: True
+eigen: False
 start_epoch: 0
