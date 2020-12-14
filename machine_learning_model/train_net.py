@@ -197,7 +197,7 @@ class Trainer:
         eigenfaces = []
         for cls_idx in range(self.num_classes):
             cls = self.classes[cls_idx]
-            eigen_vec, avg_face = load_eigenfaces(eigenface_basis=cls, dir_path="./eigenface_pickle/pickle/")
+            eigen_vec, avg_face = load_eigenfaces(eigenface_basis=cls, dir_path="/content/eigenface_pickle/pickle/")
             eigenfaces.append({'eigen_vec': eigen_vec, 'avg_face': avg_face})
 
         for i, (img, lbl) in enumerate(self.test_loader):
