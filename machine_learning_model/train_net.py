@@ -250,6 +250,7 @@ class Trainer:
         print(self.start_epoch, self.epoch)
         for e in range(self.start_epoch, self.epoch):
             print(e)
+            print("datapath: ", self.datapath)
             if self.logspace != 0:
                 for param in self.optimizer.param_groups:
                     param['lr'] = logspace_lr[e]
