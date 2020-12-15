@@ -44,6 +44,7 @@ class Trainer:
         self.opt = hparam['opt']
         self.datapath = hparam['datapath']
         self.result_path = hparam['result_path']
+        self.pickle_path = hparam['pickle_path']
         self.lst = [[], [], [], [], [], [], [], []]
         os.environ['CUDA_VISIBLE_DEVICES'] = str(self.device)
         self.classes = os.listdir(os.path.join(hparam['datapath'], "train"))
@@ -197,7 +198,7 @@ class Trainer:
         eigenfaces = []
         for cls_idx in range(self.num_classes):
             cls = self.classes[cls_idx]
-            eigen_vec, avg_face = load_eigenfaces(eigenface_basis=cls, dir_path="/content/eigenface_pickle/pickle/")
+            eigen_vec, avg_face = load_eigenfaces(eigenface_basis=cls, dir_path=os.path.join(os.getcwd(), self.pickle_path) + "/")
             eigenfaces.append({'eigen_vec': eigen_vec, 'avg_face': avg_face})
 
         for i, (img, lbl) in enumerate(self.test_loader):
@@ -229,11 +230,17 @@ class Trainer:
                 output = self.model(filtered_batch)
                 # print(output.shape)
                 all_output[cls_idx] = output
-
             best_output = torch.max(all_output, axis=0)[0].to(self.device)
-            loss = self.loss_func(best_output, lbl)
+            new_output = torch.zeros((self.bs, self.num_classes))
+            # loss = self.loss_func(best_output, lbl)
             prediction = torch.argmax(best_output, axis=1)
-
+            # print(prediction)
+            for batch_idx in range(self.bs):
+                correct_idx = prediction[batch_idx]
+                new_output[batch_idx] = all_output[correct_idx][batch_idx]
+            # print(new_loss)
+            new_output = new_output.to(self.device)
+            loss = self.loss_func(new_output, lbl)
             accuracy = torch.sum(prediction == lbl).item() / len(prediction)
             Acc += accuracy
             Loss += loss.cpu().item()
@@ -249,6 +256,7 @@ class Trainer:
             logspace_lr = np.logspace(np.log10(self.lr), np.log10(self.lr) - self.logspace, self.epoch)
         print(self.start_epoch, self.epoch)
         for e in range(self.start_epoch, self.epoch):
+            self.test_eigen()
             print(e)
             print("datapath: ", self.datapath)
             if self.logspace != 0:
