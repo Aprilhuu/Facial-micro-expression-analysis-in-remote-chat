@@ -231,11 +231,11 @@ class Trainer:
                 # print(output.shape)
                 all_output[cls_idx] = output
             best_output = torch.max(all_output, axis=0)[0].to(self.device)
-            new_output = torch.zeros((self.bs, self.num_classes))
+            new_output = torch.zeros((img.shape[0], self.num_classes))
             # loss = self.loss_func(best_output, lbl)
             prediction = torch.argmax(best_output, axis=1)
             # print(prediction)
-            for batch_idx in range(self.bs):
+            for batch_idx in range(img.shape[0]):
                 correct_idx = prediction[batch_idx]
                 new_output[batch_idx] = all_output[correct_idx][batch_idx]
             # print(new_loss)
