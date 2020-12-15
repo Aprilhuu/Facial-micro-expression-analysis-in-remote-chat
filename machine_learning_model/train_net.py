@@ -256,7 +256,7 @@ class Trainer:
             logspace_lr = np.logspace(np.log10(self.lr), np.log10(self.lr) - self.logspace, self.epoch)
         print(self.start_epoch, self.epoch)
         for e in range(self.start_epoch, self.epoch):
-            self.test_eigen()
+            # self.test_eigen()
             print(e)
             print("datapath: ", self.datapath)
             if self.logspace != 0:
