@@ -90,6 +90,7 @@ class Trainer:
             train_transform = transforms.Compose([
                 transforms.Resize((self.img_size, self.img_size)),
                 transforms.RandomHorizontalFlip(0.5),
+                transforms.Grayscale(num_output_channels=3),
                 transforms.ToTensor(),
                 # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
@@ -106,15 +107,16 @@ class Trainer:
                 transforms.RandomCrop(self.img_size),
                 transforms.RandomRotation(degrees=(-90, 90)),
                 transforms.RandomHorizontalFlip(0.5),
+                transforms.Grayscale(num_output_channels=3),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
 
             test_transform = transforms.Compose([
                 transforms.Resize((self.img_size, self.img_size)),
-                # transforms.Grayscale(num_output_channels=1),
+                transforms.Grayscale(num_output_channels=3),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
 
         self.train_set = datasets.ImageFolder(root=self.datapath + "/train", transform=train_transform)
