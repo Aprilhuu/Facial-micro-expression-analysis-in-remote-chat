@@ -45,6 +45,9 @@ class Trainer:
         self.datapath = hparam['datapath']
         self.result_path = hparam['result_path']
         self.pickle_path = hparam['pickle_path']
+        self.finetune_mode = hparam['finetune']
+        if self.finetune_mode:
+            self.finetune_path = hparam['finetune_path']
         self.lst = [[], [], [], [], [], [], [], []]
         os.environ['CUDA_VISIBLE_DEVICES'] = str(self.device)
         self.classes = os.listdir(os.path.join(hparam['datapath'], "train"))
@@ -75,6 +78,9 @@ class Trainer:
             self.model.load_state_dict(
                 torch.load(os.path.join(self.result_path, "model_{}.bin".format(self.start_epoch - 1))))
             self.lst = torch.load(os.path.join(self.result_path, "list_{}.bin".format(self.start_epoch - 1)))
+
+        if self.finetune_mode:
+            self.model.load_state_dict(torch.load(self.finetune_path))
 
         self.loss_func = nn.CrossEntropyLoss(reduction="mean")
 
