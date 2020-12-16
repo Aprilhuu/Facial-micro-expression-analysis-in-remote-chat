@@ -9,7 +9,7 @@ weight_decay: 0.00001
 epoch: 60
 seed: 0
 opt: adam
-datapath: /content/Expw
+datapath: /content/FER2013
 result_path: result_resnet18_finetune
 pickle_path: eigenface_pickle/pickle
 eigen: False
