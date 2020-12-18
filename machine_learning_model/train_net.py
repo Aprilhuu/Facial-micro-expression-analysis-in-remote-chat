@@ -14,7 +14,7 @@ import torchvision.transforms as transforms
 import random
 from torch import nn
 import matplotlib.pyplot as plt
-from google.colab import files
+# from google.colab import files
 import yaml
 
 
@@ -44,6 +44,10 @@ class Trainer:
         self.opt = hparam['opt']
         self.datapath = hparam['datapath']
         self.result_path = hparam['result_path']
+        self.pickle_path = hparam['pickle_path']
+        self.finetune_mode = hparam['finetune']
+        if self.finetune_mode:
+            self.finetune_path = hparam['finetune_path']
         self.lst = [[], [], [], [], [], [], [], []]
         os.environ['CUDA_VISIBLE_DEVICES'] = str(self.device)
         self.classes = os.listdir(os.path.join(hparam['datapath'], "train"))
@@ -75,6 +79,9 @@ class Trainer:
                 torch.load(os.path.join(self.result_path, "model_{}.bin".format(self.start_epoch - 1))))
             self.lst = torch.load(os.path.join(self.result_path, "list_{}.bin".format(self.start_epoch - 1)))
 
+        if self.finetune_mode:
+            self.model.load_state_dict(torch.load(self.finetune_path))
+
         self.loss_func = nn.CrossEntropyLoss(reduction="mean")
 
     def prepare_dataset(self):
@@ -83,6 +90,7 @@ class Trainer:
             train_transform = transforms.Compose([
                 transforms.Resize((self.img_size, self.img_size)),
                 transforms.RandomHorizontalFlip(0.5),
+                transforms.Grayscale(num_output_channels=3),
                 transforms.ToTensor(),
                 # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
@@ -99,15 +107,16 @@ class Trainer:
                 transforms.RandomCrop(self.img_size),
                 transforms.RandomRotation(degrees=(-90, 90)),
                 transforms.RandomHorizontalFlip(0.5),
+                transforms.Grayscale(num_output_channels=3),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
 
             test_transform = transforms.Compose([
                 transforms.Resize((self.img_size, self.img_size)),
-                # transforms.Grayscale(num_output_channels=1),
+                transforms.Grayscale(num_output_channels=3),
                 transforms.ToTensor(),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+                # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ])
 
         self.train_set = datasets.ImageFolder(root=self.datapath + "/train", transform=train_transform)
@@ -193,28 +202,53 @@ class Trainer:
 
         Loss = 0
         Acc = 0
+
+        eigenfaces = []
+        for cls_idx in range(self.num_classes):
+            cls = self.classes[cls_idx]
+            eigen_vec, avg_face = load_eigenfaces(eigenface_basis=cls, dir_path=os.path.join(os.getcwd(), self.pickle_path) + "/")
+            eigenfaces.append({'eigen_vec': eigen_vec, 'avg_face': avg_face})
+
         for i, (img, lbl) in enumerate(self.test_loader):
             # img = img.to(self.device)
             lbl = lbl.to(self.device)
             all_output = torch.zeros((self.num_classes, img.shape[0], self.num_classes))
+
             for cls_idx in range(self.num_classes):
-                cls = self.classes[cls_idx]
+
+                # cls = self.classes[cls_idx]
+
                 filtered_batch = torch.zeros((img.shape[0], 3, 48, 48)).to(self.device)
+
                 for img_idx in range(img.shape[0]):
+
                     individual_img = img[img_idx][0] * 255
-                    eigen_img = (eigenface_filter(individual_img.cpu(), os.path.join(os.getcwd(), 'pickle') + "/", cls,
-                                                  proj_basis_num=160))
+                    # eigen_img = (eigenface_filter(individual_img.cpu(), os.path.join(os.getcwd(), 'pickle') + "/", cls,
+                    #                               proj_basis_num=160))
+                    eigen_img = (eigenface_filter(individual_img.cpu(),
+                                                    eigenfaces[cls_idx]['eigen_vec'],
+                                                    eigenfaces[cls_idx]['avg_face'],
+                                                    proj_basis_num=160))
+
                     eigen_img_rgb = transforms.ToTensor()(np.stack((eigen_img,) * 3, axis=-1))
                     # print(eigen_img_rgb.shape)
                     filtered_batch[img_idx] = eigen_img_rgb
+
                 filtered_batch = F.interpolate(filtered_batch, size=(self.img_size, self.img_size), mode='bilinear')
                 output = self.model(filtered_batch)
                 # print(output.shape)
                 all_output[cls_idx] = output
             best_output = torch.max(all_output, axis=0)[0].to(self.device)
-            loss = self.loss_func(best_output, lbl)
+            new_output = torch.zeros((img.shape[0], self.num_classes))
+            # loss = self.loss_func(best_output, lbl)
             prediction = torch.argmax(best_output, axis=1)
-
+            # print(prediction)
+            for batch_idx in range(img.shape[0]):
+                correct_idx = prediction[batch_idx]
+                new_output[batch_idx] = all_output[correct_idx][batch_idx]
+            # print(new_loss)
+            new_output = new_output.to(self.device)
+            loss = self.loss_func(new_output, lbl)
             accuracy = torch.sum(prediction == lbl).item() / len(prediction)
             Acc += accuracy
             Loss += loss.cpu().item()
@@ -225,11 +259,14 @@ class Trainer:
         self.lst[3].append(Acc / (i + 1))
 
     def start(self):
+
         if self.logspace != 0:
             logspace_lr = np.logspace(np.log10(self.lr), np.log10(self.lr) - self.logspace, self.epoch)
         print(self.start_epoch, self.epoch)
         for e in range(self.start_epoch, self.epoch):
+            # self.test_eigen()
             print(e)
+            print("datapath: ", self.datapath)
             if self.logspace != 0:
                 for param in self.optimizer.param_groups:
                     param['lr'] = logspace_lr[e]

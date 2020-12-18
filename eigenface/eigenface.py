@@ -51,7 +51,8 @@ def eigenface_projection(img, eigen_vec, basis_num):
 
 def save_projection(train_dataset='disgust', proj_basis_num=80):
 
-	train_images = load_images_from_folder('./FER2013/train/' + train_dataset)
+	# train_images = load_images_from_folder('./FER2013/train/' + train_dataset)
+	train_images = load_images_from_folder('./FER2013/test/' + train_dataset)
 	eigen_val = pickle_load("./pickled_eigenfaces/cov_eigenval_"+train_dataset+".obj").real
 	eigen_vec = pickle_load("./pickled_eigenfaces/cov_eigenvec_"+train_dataset+".obj").real
 	avg_face = pickle_load("./pickled_eigenfaces/avg_face_"+train_dataset+".obj").real
@@ -104,7 +105,8 @@ def load_eigenfaces(eigenface_basis='disgust', dir_path="./pickled_eigenfaces/")
 
 def main():
 	# prepare_eigenfaces(train_dataset='surprise')
-	# save_projection(train_dataset='disgust', proj_basis_num=80)
+	save_projection(train_dataset='surprise', proj_basis_num=160)
+	exit()
 
 	test_dataset = 'angry'
 	test_images = load_images_from_folder('./FER2013/test/' + test_dataset)

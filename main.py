@@ -32,6 +32,7 @@ def main():
     parser.add_argument("--device", default=0, type=int)
     parser.add_argument("--num_classes", default=7, type=int)
     parser.add_argument('--video_path', default='./Facial-micro-expression-analysis-in-remote-chat/data/sheldon.mp4', type=str)
+    parser.add_argument('--video_name', default='sheldon.mp4', type=str)
     parser.add_argument('--sample_rate', default=10, type=int)
     parser.add_argument('--result_dir', default="./detection_results", type=str)
 
@@ -90,6 +91,7 @@ def main():
     out = model(test_imgs)
     # print(out)
     emotions = []
+    emotions_lbl = []
     predictions = torch.argmax(out, axis=1)
     txt = open(os.path.join(args.result_dir, "emotions.txt"), "w")
     for i in range(predictions.shape[0]):
@@ -98,10 +100,9 @@ def main():
         cv2.imwrite(os.path.join(args.result_dir, img_name), resized[i])
         txt.write("img_name: {}, {}\n".format(img_name, class2lbl[str(p)]))
         emotions.append(class2lbl[str(p)])
+        emotions_lbl.append(int(p))
+    plot_trend(number_of_frames=resized.shape[0], emotion_labels=emotions_lbl, input_video_name=args.video_name, save_path=args.result_path)
 
-    plt.hist(emotions)
-    plt.savefig(os.path.join(args.result_dir, "trend.png"))
-    txt.close()
 
 
 if __name__ == "__main__":
